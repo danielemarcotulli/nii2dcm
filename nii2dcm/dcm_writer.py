@@ -5,6 +5,17 @@ creates a DICOM Series
 import os
 import pydicom as pyd
 
+def update_dicom_metadata(dicom, new_metadata):
+    """
+    Update DICOM metadata.
+
+    dicom - pydicom Dataset object
+    new_metadata - dictionary containing new metadata values
+    """
+    for tag, value in new_metadata.items():
+        setattr(dicom, tag, value)
+    return dicom
+
 
 def write_slice(dcm, img_data, slice_index, output_dir):
     """

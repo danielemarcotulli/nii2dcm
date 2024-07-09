@@ -301,4 +301,8 @@ class DicomMRI(Dicom):
             'RequestingService',
         ]
 
+        # Apply new metadata if provided
+        if new_metadata:
+            self.ds = update_dicom_metadata(self.ds, new_metadata)
+
 

@@ -20,7 +20,6 @@ def cli(args=None):
         prog="nii2dcm",
         description="nii2dcm - NIfTI file to DICOM conversion"
     )
-
     parser.add_argument("input_file", type=str, help="[.nii/.nii.gz] input NIfTI file")
     parser.add_argument("output_dir", type=str, help="[directory] output DICOM path")
     parser.add_argument(
@@ -28,8 +27,39 @@ def cli(args=None):
         type=str,
         help="[string] type of DICOM. Available types: MR, SVR."
     )
+    parser.add_argument('--study-date', type=str, help='Study Date')
+    parser.add_argument('--study-id', type=str, help='StudyID')
     parser.add_argument("-r", "--ref_dicom", type=str, help="[.dcm] Reference DICOM file for Attribute transfer")
     parser.add_argument("-v", "--version", action="version", version=__version__)
+
+    args = parser.parse_args()
+
+    # Collect new metadata
+    new_metadata = {
+        'StudyID': args.study_id,
+        'StudyDate': args.study_date,
+    }
+
+    # Remove None values from metadata
+    new_metadata = {k: v for k, v in new_metadata.items() if v is not None}
+
+    # Load the NIfTI file
+    nii_img = nib.load(args.nifti_file)
+    img_data = nii_img.get_fdata()
+
+    # Initialize DICOM object with new metadata
+    dicom_mri = DicomMRI(new_metadata=new_metadata)
+
+    # Create output directory if it doesn't exist
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+
+    # Iterate over each slice and write it as a DICOM file
+    for slice_index in range(img_data.shape[2]):
+        write_slice(dicom_mri, img_data, slice_index, args.output_dir, new_metadata)
+
+if __name__ == '__main__':
+    main()
 
     args = parser.parse_args()
 
