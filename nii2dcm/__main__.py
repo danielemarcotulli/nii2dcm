@@ -36,8 +36,8 @@ def cli(args=None):
 
     # Collect new metadata
     new_metadata = {
-        'StudyID': args.study_id,
         'StudyDate': args.study_date,
+        'StudyID': args.study_id
     }
 
     # Remove None values from metadata
