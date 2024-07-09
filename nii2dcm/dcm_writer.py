@@ -37,6 +37,9 @@ def write_slice(dcm, img_data, slice_index, output_dir):
     # write pixel data
     dcm.ds.PixelData = img_slice.tobytes()
 
+    # Update metadata
+    dcm.ds = update_dicom_metadata(dcm.ds, new_metadata)
+
     # write DICOM file
     dcm.ds.save_as(os.path.join(output_dir, output_filename), write_like_original=False)
 
