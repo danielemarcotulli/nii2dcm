@@ -12,11 +12,11 @@ from nii2dcm.dcm_writer import (
     transfer_nii_hdr_series_tags,
     transfer_nii_hdr_instance_tags,
     transfer_ref_dicom_series_tags,
-    write_slice
+    write_slice, update_dicom_metadata
 )
 
 
-def run_nii2dcm(input_nii_path, output_dcm_path, dicom_type=None, ref_dicom_file=None):
+def run_nii2dcm(input_nii_path, output_dcm_path, dicom_type=None, ref_dicom_file=None, new_metadata=None):
     """
     Execute NIfTI to DICOM conversion
 
@@ -56,6 +56,11 @@ def run_nii2dcm(input_nii_path, output_dcm_path, dicom_type=None, ref_dicom_file
     if ref_dicom_file is not None:
         ref_dicom = pyd.dcmread(ref_dicom_file)
 
+    # Apply new metadata
+    if new_metadata:
+        dicom.ds = update_dicom_metadata(dicom.ds, new_metadata)
+
+
     # transfer Series tags from NIfTI
     transfer_nii_hdr_series_tags(dicom, nii2dcm_parameters)
 
@@ -77,6 +82,6 @@ def run_nii2dcm(input_nii_path, output_dcm_path, dicom_type=None, ref_dicom_file
         transfer_nii_hdr_instance_tags(dicom, nii2dcm_parameters, instance_index)
 
         # Write slice
-        write_slice(dicom, nii_img, instance_index, output_dcm_path)
+        write_slice(dicom, nii_img, instance_index, output_dcm_path, new_metadata)
 
     print(f'nii2dcm: DICOM files written to: {abspath(output_dcm_path)}')  # TODO use logger

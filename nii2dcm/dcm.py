@@ -7,6 +7,7 @@ Tom Roberts
 import datetime
 import os
 from random import randint
+import nibabel as nib
 
 import pydicom as pyd
 from pydicom.dataset import FileDataset, FileMetaDataset
@@ -95,7 +96,7 @@ class Dicom:
 
         # ImageOrientationPatient
         # hard-coded, probably better way to define based on NIfTI values
-        self.ds.ImageOrientationPatient = ['1', '0', '0', '0', '1', '0']
+        # self.ds.ImageOrientationPatient = ['1', '0', '0', '0', '1', '0']
 
         # Display Attributes
         # NB: RescaleIntercept and RescaleSlope do NOT appear to be in MR Image Module, but are in CT Image, Secondary
@@ -204,7 +205,7 @@ class DicomMRI(Dicom):
     - Adds MR Image Module to Dicom object
     """
 
-    def __init__(self, filename=nii2dcm_temp_filename):
+    def __init__(self, filename=nii2dcm_temp_filename, new_metadata=None):
         super().__init__(filename)
 
         """
@@ -301,8 +302,10 @@ class DicomMRI(Dicom):
             'RequestingService',
         ]
 
+
         # Apply new metadata if provided
         if new_metadata:
             self.ds = update_dicom_metadata(self.ds, new_metadata)
+
 
 

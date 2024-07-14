@@ -5,6 +5,12 @@ creates a DICOM Series
 import os
 import pydicom as pyd
 
+def truncate_string(value, max_length):
+    """Truncate the string to the maximum allowed length."""
+    if len(value) > max_length:
+        return value[:max_length]
+    return value
+
 def update_dicom_metadata(dicom, new_metadata):
     """
     Update DICOM metadata.
@@ -13,11 +19,19 @@ def update_dicom_metadata(dicom, new_metadata):
     new_metadata - dictionary containing new metadata values
     """
     for tag, value in new_metadata.items():
+        # Truncate values if necessary
+        if tag in dicom and isinstance(value, str):
+            vr = dicom[tag].VR
+            if vr == "DS":
+                value = truncate_string(value, 16)
+            elif vr == "IS":
+                value = truncate_string(value, 12)
+            # Add other VRs if necessary
+
         setattr(dicom, tag, value)
     return dicom
 
-
-def write_slice(dcm, img_data, slice_index, output_dir):
+def write_slice(dcm, img_data, slice_index, output_dir, new_metadata):
     """
     write a single DICOM slice
 
@@ -99,7 +113,22 @@ def transfer_ref_dicom_series_tags(dcm, ref_dcm):
     dcm – nii2dcm DICOM object
     ref_dcm - reference DICOM object
     """
-
+    dcm.ds.Rows = nii2dcm_parameters['Rows']
+    dcm.ds.Columns = nii2dcm_parameters['Columns']
+    dcm.ds.PixelSpacing = [round(float(nii2dcm_parameters['dimX']), 2), round(float(nii2dcm_parameters['dimY']), 2)]
+    dcm.ds.SliceThickness = nii2dcm_parameters['SliceThickness']
+    dcm.ds.SpacingBetweenSlices = round(float(nii2dcm_parameters['SpacingBetweenSlices']), 2)
+    # Update ImageOrientationPatient based on your desired orientation
+    #dcm.ds.ImageOrientationPatient = ['1', '0', '0', '0', '1', '0']  # Example values for head front on top
+    dcm.ds.AcquisitionMatrix = nii2dcm_parameters['AcquisitionMatrix']
+    dcm.ds.SmallestImagePixelValue = int(nii2dcm_parameters['SmallestImagePixelValue']) \
+        if int(nii2dcm_parameters['SmallestImagePixelValue']) > 0 else 0  # SmallestImagePixelValue must be >= 0
+    dcm.ds.LargestImagePixelValue = int(nii2dcm_parameters['LargestImagePixelValue'])
+    dcm.ds.WindowCenter = nii2dcm_parameters['WindowCenter']
+    dcm.ds.WindowWidth = nii2dcm_parameters['WindowWidth']
+    dcm.ds.RescaleIntercept = nii2dcm_parameters['RescaleIntercept']
+    dcm.ds.RescaleSlope = nii2dcm_parameters['RescaleSlope']
+    
     for current_attribute in dcm.attributes_to_transfer:
         try:
             attribute_value = getattr(ref_dcm, current_attribute)
